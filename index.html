@@ -14,7 +14,7 @@
 <script>
 /************************************************************
  * JOGO: Até o Último Compasso
- * ETAPA 1: Ritmo da Valsa (3/4)
+ * ETAPA 2: Música por partes (frases musicais)
  ************************************************************/
 
 class Primavera extends Phaser.Scene {
@@ -35,26 +35,37 @@ class Primavera extends Phaser.Scene {
     // Player
     this.player = this.add.circle(120, 320, 20, 0xffc0cb);
 
-    // Música
+    // ===== DEFINIÇÃO DAS FRASES MUSICAIS =====
+    // Valores iniciais aproximados (podem ser refinados depois)
+    this.phrases = [
+      { start: 0.0, duration: 4.0 },
+      { start: 4.0, duration: 4.0 },
+      { start: 8.0, duration: 4.0 },
+      { start: 12.0, duration: 4.0 },
+      { start: 16.0, duration: 4.0 }
+    ];
+
+    this.currentPhrase = 0;
+
+    // Música (não toca contínua)
     this.music = this.sound.add('valsa', { volume: 0.6 });
 
     // ===== RITMO DA VALSA =====
-    this.bpm = 170; // valor aproximado da valsa
+    this.bpm = 170;
     this.beatInterval = 60000 / this.bpm;
-    this.currentBeat = 0; // 0,1,2 (3 tempos)
+    this.currentBeat = 0;
     this.lastBeatTime = 0;
-    this.hitWindow = 180; // ms aceitáveis para acerto
+    this.hitWindow = 180;
 
-    // Indicador visual do compasso
     this.beatIndicator = this.add.circle(400, 500, 15, 0xffffff);
 
     this.started = false;
-    this.speed = 40;
+    this.speed = 30;
 
     this.input.once('pointerdown', () => {
       this.started = true;
-      this.music.play();
-      this.instruction.setText('Siga o ritmo da valsa');
+      this.instruction.setText('Construa a música no ritmo da valsa');
+      this.playPhrase();
       this.lastBeatTime = this.time.now;
     });
 
@@ -67,7 +78,7 @@ class Primavera extends Phaser.Scene {
   update(time, delta) {
     if (!this.started) return;
 
-    // Avança o ritmo
+    // Pulso rítmico
     if (time - this.lastBeatTime >= this.beatInterval) {
       this.currentBeat = (this.currentBeat + 1) % 3;
       this.lastBeatTime += this.beatInterval;
@@ -77,6 +88,7 @@ class Primavera extends Phaser.Scene {
     // Movimento contínuo
     this.player.x += this.speed * delta / 1000;
 
+    // Final da fase
     if (this.player.x > 760) {
       this.music.stop();
       this.scene.start('Final');
@@ -93,6 +105,15 @@ class Primavera extends Phaser.Scene {
     });
   }
 
+  playPhrase() {
+    if (this.currentPhrase >= this.phrases.length) {
+      return;
+    }
+
+    const phrase = this.phrases[this.currentPhrase];
+    this.music.play({ seek: phrase.start, duration: phrase.duration });
+  }
+
   checkHit() {
     const now = this.time.now;
     const diff = Math.abs(now - this.lastBeatTime);
@@ -100,6 +121,12 @@ class Primavera extends Phaser.Scene {
     if (diff <= this.hitWindow) {
       // ACERTO
       this.player.x += 35;
+
+      // Avança frase musical
+      this.currentPhrase++;
+      if (this.currentPhrase < this.phrases.length) {
+        this.playPhrase();
+      }
     } else {
       // ERRO
       this.music.stop();

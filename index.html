@@ -3,48 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rosen aus dem Süden</title>
+  <title>Até o Último Compasso</title>
+
+  <!-- Phaser (gratuito, via CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+
   <style>
-    body { margin: 0; background: #000; }
-    canvas { display: block; margin: 0 auto; }
+    body {
+      margin: 0;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
 <script>
+/*****************************************************
+ *  JOGO: Até o Último Compasso
+ *  Versão: Protótipo funcional com áudio
+ *  Plataforma: Web / Mobile (GitHub Pages)
+ *****************************************************/
+
 class Primavera extends Phaser.Scene {
-  constructor() { super('Primavera'); }
+  constructor() {
+    super('Primavera');
+  }
 
   preload() {
+    // Carrega a música (verifique se o caminho e nome estão corretos)
     this.load.audio('valsa', 'assets/rosen.mp3');
   }
 
   create() {
-    this.add.text(20, 20, 'Primavera – Parque', { fontSize: '20px', fill: '#ffffff' });
-
-    this.music = this.sound.add('valsa');
-
-    // Inicia a música APENAS após interação do usuário (exigência dos navegadores)
-    this.add.text(20, 60, 'Toque/click para iniciar a dança', {
-      fontSize: '16px', fill: '#ffffff'
+    // Título da cena
+    this.add.text(20, 20, 'Até o Último Compasso', {
+      fontSize: '22px',
+      fill: '#ffffff'
     });
 
-    this.input.once('pointerdown', () => {
-      this.music.play({ volume: 0.6 });
-      this.started = true;
+    // Subtítulo / ambiente
+    this.add.text(20, 50, 'Primavera – Parque', {
+      fontSize: '16px',
+      fill: '#cce6cc'
     });
 
+    // Instrução inicial
+    this.startText = this.add.text(20, 90, 'Toque / clique para iniciar a dança', {
+      fontSize: '16px',
+      fill: '#ffffff'
+    });
+
+    // Cria o som, mas NÃO toca ainda
+    this.music = this.sound.add('valsa', { volume: 0.6 });
+
+    // Personagem (representação simples)
     this.player = this.add.circle(100, 300, 20, 0xffc0cb);
-    this.speed = 120;
 
+    // Movimento automático
+    this.speed = 80;
+    this.started = false;
+
+    // Primeiro toque libera o áudio (regra dos navegadores)
+    this.input.once('pointerdown', () => {
+      this.music.play();
+      this.started = true;
+      this.startText.setText('Dançando...');
+    });
+
+    // Toques seguintes fazem pequenos avanços (placeholder de dança)
     this.input.on('pointerdown', () => {
-      this.player.x += 40;
+      if (!this.started) return;
+      this.player.x += 25;
     });
   }
 
   update(time, delta) {
+    if (!this.started) return;
+
+    // Movimento contínuo
     this.player.x += this.speed * delta / 1000;
 
+    // Final da fase
     if (this.player.x > 780) {
       this.music.stop();
       this.scene.start('Final');
@@ -53,12 +96,21 @@ class Primavera extends Phaser.Scene {
 }
 
 class Final extends Phaser.Scene {
-  constructor() { super('Final'); }
+  constructor() {
+    super('Final');
+  }
 
   create() {
-    this.add.text(400, 300, 'Te amo!', {
-      fontSize: '48px',
+    this.cameras.main.setBackgroundColor('#0b1a2b');
+
+    this.add.text(400, 260, 'Até o Último Compasso', {
+      fontSize: '28px',
       fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    this.add.text(400, 320, 'Te amo!', {
+      fontSize: '48px',
+      fill: '#ffb6c1'
     }).setOrigin(0.5);
   }
 }
@@ -69,7 +121,9 @@ const config = {
   height: 600,
   backgroundColor: '#1a2b1a',
   scene: [Primavera, Final],
-  audio: { disableWebAudio: false }
+  audio: {
+    disableWebAudio: false
+  }
 };
 
 new Phaser.Game(config);

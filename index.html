@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rosen aus dem Süden</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <style>
+    body { margin: 0; background: #000; }
+    canvas { display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+<script>
+class Primavera extends Phaser.Scene {
+  constructor() { super('Primavera'); }
+
+  preload() {
+    this.load.audio('valsa', 'assets/rosen.mp3');
+  }
+
+  create() {
+    this.add.text(20, 20, 'Primavera – Parque', { fontSize: '20px', fill: '#ffffff' });
+
+    this.music = this.sound.add('valsa');
+
+    // Inicia a música APENAS após interação do usuário (exigência dos navegadores)
+    this.add.text(20, 60, 'Toque/click para iniciar a dança', {
+      fontSize: '16px', fill: '#ffffff'
+    });
+
+    this.input.once('pointerdown', () => {
+      this.music.play({ volume: 0.6 });
+      this.started = true;
+    });
+
+    this.player = this.add.circle(100, 300, 20, 0xffc0cb);
+    this.speed = 120;
+
+    this.input.on('pointerdown', () => {
+      this.player.x += 40;
+    });
+  }
+
+  update(time, delta) {
+    this.player.x += this.speed * delta / 1000;
+
+    if (this.player.x > 780) {
+      this.music.stop();
+      this.scene.start('Final');
+    }
+  }
+}
+
+class Final extends Phaser.Scene {
+  constructor() { super('Final'); }
+
+  create() {
+    this.add.text(400, 300, 'Te amo!', {
+      fontSize: '48px',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+  }
+}
+
+const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  backgroundColor: '#1a2b1a',
+  scene: [Primavera, Final],
+  audio: { disableWebAudio: false }
+};
+
+new Phaser.Game(config);
+</script>
+</body>
+</html>
